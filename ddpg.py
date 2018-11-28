@@ -19,7 +19,7 @@ REPLAY_START = 1000
 
 class DDPG(object):
     def __init__(self, a_dim, s_dim, a_bound):
-        self.memory = np.zeros((MEMORY_CAPACITY, s_dim * 2 + a_dim + 1), dtype=np.float64)
+        self.memory = np.zeros((MEMORY_CAPACITY, s_dim * 2 + a_dim + 1 + 1), dtype=np.float64)
         self.pointer = 0
         self.sess = tf.Session()
         self.a_dim, self.s_dim, self.a_bound = a_dim, s_dim, a_bound
@@ -28,6 +28,7 @@ class DDPG(object):
         self.S_ = tf.placeholder(tf.float64, [None, s_dim], name='S_')
         self.R = tf.placeholder(tf.float64, [None, ], name='reward')
         self.a = self._build_a(self.S)
+        self.done = tf.placeholder(tf.float64, [None, ], name='done')
         q = self._build_c(self.S, self.a)
         a_params = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='Actor')
         c_params = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='Critic')
@@ -44,7 +45,7 @@ class DDPG(object):
         self.atrain = tf.train.AdamOptimizer(LR_A).minimize(a_loss, var_list=a_params)
 
         with tf.control_dependencies(target_update):  # soft replacement happened at here
-            q_target = self.R + GAMMA * q_
+            q_target = self.R + GAMMA * q_ * (1 - self.done)
             td_error = tf.losses.mean_squared_error(labels=q_target, predictions=q)
             self.ctrain = tf.train.AdamOptimizer(LR_C).minimize(td_error, var_list=c_params)
 
@@ -62,19 +63,21 @@ class DDPG(object):
         bs = bt[:, :self.s_dim]
         ba = bt[:, self.s_dim:self.s_dim + self.a_dim]
         br = bt[:, self.s_dim + self.a_dim]
-        bs_ = bt[:, -self.s_dim:]
+        bs_ = bt[:, -self.s_dim - 1:-1]
+        bdone = bt[:, -1]
         self.sess.run(self.atrain, feed_dict={self.S: bs})
-        self.sess.run(self.ctrain, feed_dict={self.S: bs, self.a: ba, self.R: br, self.S_: bs_})
+        self.sess.run(self.ctrain, feed_dict={self.S: bs, self.a: ba, self.R: br, self.S_: bs_, self.done: bdone})
 
-    def store_transition(self, s, a, r, s_):  # 每次存储一个即可
+    def store_transition(self, s, a, r, s_, done):  # 每次存储一个即可
         s = np.reshape(np.array(s), [self.s_dim, 1])
         a = np.reshape(np.array(a), [self.a_dim, 1])
         r = np.reshape(np.array(r), [1, 1])
         s_ = np.reshape(np.array(s_), [self.s_dim, 1])
+        done = np.reshape(np.array(done), [1, 1])
 
-        transition = np.vstack((s, a, r, s_))
+        transition = np.vstack((s, a, r, s_, done))
         index = self.pointer % MEMORY_CAPACITY
-        self.memory[index, :] = np.reshape(transition, [2 * self.s_dim + self.a_dim + 1, ])
+        self.memory[index, :] = np.reshape(transition, [2 * self.s_dim + self.a_dim + 1 + 1, ])
         self.pointer += 1
 
     def _build_a(self, s, reuse=None, custom_getter=None):

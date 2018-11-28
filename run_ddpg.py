@@ -18,11 +18,14 @@ for episode in range(1000):
     terminate = False
     count = 0
     while not terminate:
-        action = np.reshape(np.clip(agent.choose_action(state)+np.random.normal(0, var,size=[4,]), -1, 1),[4,])
+        action = np.reshape(np.clip(agent.choose_action(state) + np.random.normal(0, var, size=[4, ]), -1, 1), [4, ])
         next_state, reward, done, _ = env.step(action)
         # print(action)
         cum_reward += reward
-        agent.store_transition(state, action, reward, next_state)
+        bd = 0
+        if done:
+            bd = 1
+        agent.store_transition(state, action, reward, next_state, bd)
         state = next_state
         count += 1
         agent.learn()
