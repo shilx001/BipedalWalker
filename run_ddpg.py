@@ -25,13 +25,12 @@ for episode in range(1000):
         agent.store_transition(state, action, reward, next_state)
         state = next_state
         count += 1
+        agent.learn()
         if done:
             terminate = True
             print('Episode', episode, ' Complete at reward ', cum_reward, '!!!')
             break
     total_reward.append(cum_reward)
-    for step in range(1000):
-        agent.learn()
     if var > 0.1:
         var *= 0.995
 
