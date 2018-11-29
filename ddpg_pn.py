@@ -84,10 +84,9 @@ class DDPG(object):
                 [1, HIDDEN_SIZE], dtype=tf.float64, stddev=0.2)
             h1 = tf.contrib.layers.layer_norm(h1)
             h2 = tf.layers.dense(h1, units=self.a_dim, activation=tf.nn.relu, trainable=trainable) + tf.random_normal(
-                [1, self.a_dim], dtype=tf.float64, stddev=0.2)
+                [1, HIDDEN_SIZE], dtype=tf.float64, stddev=0.2)
             h2 = tf.contrib.layers.layer_norm(h2)
-            h3 = tf.layers.dense(h2, units=self.a_dim, activation=tf.nn.tanh, trainable=trainable) + tf.random_normal(
-                [1, self.a_dim], dtype=tf.float64, stddev=0.2)
+            h3 = tf.layers.dense(h2, units=self.a_dim, activation=tf.nn.tanh, trainable=trainable)
             return h3 * self.a_bound
 
     def _build_c(self, s, a, reuse=None, custom_getter=None):
@@ -97,6 +96,6 @@ class DDPG(object):
             input_a = tf.reshape(a, [-1, self.a_dim])
             input_all = tf.concat([input_s, input_a], axis=1)  # s: [batch_size, s_dim]
             h1 = tf.layers.dense(input_all, units=HIDDEN_SIZE, activation=tf.nn.relu, trainable=trainable)
-            h2 = tf.layers.dense(h1, units=1, activation=tf.nn.relu, trainable=trainable)
+            h2 = tf.layers.dense(h1, units=HIDDEN_SIZE, activation=tf.nn.relu, trainable=trainable)
             h3 = tf.layers.dense(h2, units=1, activation=None, trainable=trainable)
             return h3
