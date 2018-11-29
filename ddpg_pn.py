@@ -83,7 +83,7 @@ class DDPG(object):
             h1 = tf.layers.dense(s, units=HIDDEN_SIZE, activation=tf.nn.relu, trainable=trainable) + tf.random_normal(
                 [1, HIDDEN_SIZE], dtype=tf.float64, stddev=0.2)
             h1 = tf.contrib.layers.layer_norm(h1)
-            h2 = tf.layers.dense(h1, units=self.a_dim, activation=tf.nn.relu, trainable=trainable) + tf.random_normal(
+            h2 = tf.layers.dense(h1, units=HIDDEN_SIZE, activation=tf.nn.relu, trainable=trainable) + tf.random_normal(
                 [1, HIDDEN_SIZE], dtype=tf.float64, stddev=0.2)
             h2 = tf.contrib.layers.layer_norm(h2)
             h3 = tf.layers.dense(h2, units=self.a_dim, activation=tf.nn.tanh, trainable=trainable)
