@@ -11,7 +11,7 @@ env = gym.make('BipedalWalker-v2')
 agent = DDPG(a_dim=4, s_dim=24, a_bound=1)
 
 total_reward = []
-for episode in range(300):
+for episode in range(10000):
     state = env.reset()
     var = 1
     cum_reward = 0
