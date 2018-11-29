@@ -15,11 +15,14 @@ for episode in range(10000):
     state = env.reset()
     cum_reward = 0
     for step in range(1600):
+        bdone = 0
         action = np.reshape(agent.choose_action(state), [4, ])
         next_state, reward, done, _ = env.step(action)
         # print(action)
         cum_reward += reward
-        agent.store_transition(state, action, reward, next_state)
+        if done:
+            bdone = 1
+        agent.store_transition(state, action, reward, next_state, bdone)
         state = next_state
         agent.learn()
         if done:
