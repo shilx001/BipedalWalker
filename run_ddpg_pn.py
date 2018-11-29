@@ -13,7 +13,6 @@ agent = DDPG(a_dim=4, s_dim=24, a_bound=1)
 total_reward = []
 for episode in range(10000):
     state = env.reset()
-    var = 1
     cum_reward = 0
     for step in range(1600):
         action = np.reshape(agent.choose_action(state), [4, ])
@@ -29,8 +28,6 @@ for episode in range(10000):
         if step == 1600 - 1:
             print('Episode', episode, ' finished at reward ', cum_reward)
     total_reward.append(cum_reward)
-    if var > 0.1:
-        var *= 0.999
 
 plt.plot(total_reward)
 plt.xlabel('Episode')
