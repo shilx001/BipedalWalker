@@ -16,7 +16,7 @@ for episode in range(300):
     var = 1
     cum_reward = 0
     for step in range(1600):
-        action = np.reshape(agent.choose_action(state),[4,])
+        action = np.reshape(agent.choose_action(state), [4, ])
         next_state, reward, done, _ = env.step(action)
         # print(action)
         cum_reward += reward
@@ -30,11 +30,11 @@ for episode in range(300):
             print('Episode', episode, ' finished at reward ', cum_reward)
     total_reward.append(cum_reward)
     if var > 0.1:
-        var -= 0.01
+        var *= 0.999
 
 plt.plot(total_reward)
 plt.xlabel('Episode')
 plt.ylabel('Total reward')
 plt.title('MountainCar continuous')
-plt.savefig('ddpg')
-pickle.dump(total_reward, open('DDPG'))
+plt.savefig('ddpg_pn')
+pickle.dump(total_reward, open('DDPG_pn', 'wb'))
