@@ -26,7 +26,7 @@ for episode in range(300):
         if done:
             print('Episode', episode, ' Complete at reward ', cum_reward, '!!!')
             break
-        if step == 1000 - 1:
+        if step == 1600 - 1:
             print('Episode', episode, ' finished at reward ', cum_reward)
     total_reward.append(cum_reward)
     if var > 0.1:
