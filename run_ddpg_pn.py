@@ -1,0 +1,40 @@
+# normal DDPG with parameter noise
+
+import numpy as np
+import gym
+from ddpg_pn import DDPG
+import matplotlib.pyplot as plt
+import pickle
+
+env = gym.make('BipedalWalker-v2')
+
+agent = DDPG(a_dim=4, s_dim=24, a_bound=1)
+
+total_reward = []
+for episode in range(300):
+    state = env.reset()
+    var = 1
+    cum_reward = 0
+    for step in range(1600):
+        action = np.reshape(agent.choose_action(state),[4,])
+        next_state, reward, done, _ = env.step(action)
+        # print(action)
+        cum_reward += reward
+        agent.store_transition(state, action, reward, next_state)
+        state = next_state
+        agent.learn()
+        if done:
+            print('Episode', episode, ' Complete at reward ', cum_reward, '!!!')
+            break
+        if step == 1000 - 1:
+            print('Episode', episode, ' finished at reward ', cum_reward)
+    total_reward.append(cum_reward)
+    if var > 0.1:
+        var -= 0.01
+
+plt.plot(total_reward)
+plt.xlabel('Episode')
+plt.ylabel('Total reward')
+plt.title('MountainCar continuous')
+plt.savefig('ddpg')
+pickle.dump(total_reward, open('DDPG'))
