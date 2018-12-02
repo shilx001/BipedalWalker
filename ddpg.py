@@ -13,6 +13,7 @@ MEMORY_CAPACITY = 1000000
 BATCH_SIZE = 32
 HIDDEN_SIZE = 64
 REPLAY_START = 1000
+DROP_OUT_PROBABILITY = 0.85
 
 
 ################## DDPG algorithm ##################
@@ -84,6 +85,7 @@ class DDPG(object):
         trainable = True if reuse is None else False
         with tf.variable_scope('Actor', reuse=reuse, custom_getter=custom_getter):
             h1 = tf.layers.dense(s, units=HIDDEN_SIZE, activation=tf.nn.relu, trainable=trainable)
+            h1 = tf.nn.dropout(h1, keep_prob=DROP_OUT_PROBABILITY)
             h2 = tf.layers.dense(h1, units=self.a_dim, activation=tf.nn.tanh, trainable=trainable)
             return h2 * self.a_bound
 
@@ -94,5 +96,6 @@ class DDPG(object):
             input_a = tf.reshape(a, [-1, self.a_dim])
             input_all = tf.concat([input_s, input_a], axis=1)  # s: [batch_size, s_dim]
             h1 = tf.layers.dense(input_all, units=HIDDEN_SIZE, activation=tf.nn.relu, trainable=trainable)
+            h1 = tf.nn.dropout(h1, keep_prob=DROP_OUT_PROBABILITY)
             h2 = tf.layers.dense(h1, units=1, activation=None, trainable=trainable)
             return h2
