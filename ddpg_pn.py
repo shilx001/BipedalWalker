@@ -52,19 +52,34 @@ class DDPG(object):
 
         self.sess.run(tf.global_variables_initializer())
 
+    def scale(self, state):
+        # 对state进行放缩
+        return (state - self.s_mean) / self.s_std
+
     def choose_action(self, s):
         s = np.reshape(s, [-1, self.s_dim])
-        return self.sess.run(self.a, feed_dict={self.S: s})
+        if self.pointer > self.replay_start:
+            s = self.scale(s)
+        action=self.sess.run(self.a, feed_dict={self.S: s})
+        return action
 
     def learn(self):
         if self.pointer < self.replay_start:
             return
         indices = np.random.choice(MEMORY_CAPACITY, size=BATCH_SIZE)
+
+        if self.pointer == self.replay_start:  # data normalization
+            # 对experience replay的数据进行处理，找出需要放缩的mean和std
+            # 主要问题在于每个特征都要放缩
+            states = self.memory[:self.replay_start, :self.s_dim]
+            self.s_mean = np.mean(states, axis=0)
+            self.s_std = np.std(states, axis=0)
+
         bt = self.memory[indices, :]  # transitions data
-        bs = bt[:, :self.s_dim]
+        bs = self.scale(bt[:, :self.s_dim])
         ba = bt[:, self.s_dim:self.s_dim + self.a_dim]
         br = bt[:, self.s_dim + self.a_dim]
-        bs_ = bt[:, -self.s_dim - 1:-1]
+        bs_ = self.scale(bt[:, -self.s_dim - 1:-1])
         bdone = bt[:, -1]
         self.sess.run(self.atrain, feed_dict={self.S: bs})
         self.sess.run(self.ctrain, feed_dict={self.S: bs, self.a: ba, self.R: br, self.S_: bs_, self.done: bdone})
@@ -90,8 +105,8 @@ class DDPG(object):
             h1 = tf.contrib.layers.layer_norm(h1)
             h2 = tf.layers.dense(h1, units=HIDDEN_SIZE, activation=tf.nn.relu, trainable=trainable) + tf.random_normal(
                 [1, HIDDEN_SIZE], dtype=tf.float64, stddev=0.2)
-            h2 = tf.contrib.layers.layer_norm(h2)
             h2 = tf.nn.dropout(h2, keep_prob=DROP_OUT_PROBABILITY)
+            h2 = tf.contrib.layers.layer_norm(h2)
             h3 = tf.layers.dense(h2, units=self.a_dim, activation=tf.nn.tanh, trainable=trainable)
             return h3 * self.a_bound
 
